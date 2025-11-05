@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   StatusBar,
   StyleSheet,
@@ -19,6 +19,7 @@ import {
 import Formulario from './src/components/Formulario';
 import Paciente from './src/components/Paciente';
 import Informacion from './src/components/InformacionPaciente';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -49,11 +50,41 @@ function AppContent() {
   const [paciente, setPaciente] = useState({});
   const [modalPaciente, setModalPaciente] = useState(false);
 
+
+  useEffect(() =>  {
+    const obtenerCitasStorage= async () => {
+      try {
+         const citasStorage = await AsyncStorage.getItem('citas')
+
+         if(citasStorage){
+            setPacientes(JSON.parse(citasStorage))
+         }
+      } catch (error) {
+        console.log(error)
+      }
+
+    }
+
+    obtenerCitasStorage()
+  }, [])
+
+
+
   const pacienteEditar = id => {
     const pacienteEditar = pacientes.filter(paciente => paciente.id === id);
 
     setPaciente(pacienteEditar[0]);
   };
+
+    const guardarCitasStorage = async (citasJSON) => {
+        try {
+          await AsyncStorage.setItem('citas', citasJSON)
+          
+        } catch (error) {
+          console.log(error)
+        }
+  }
+
 
   const pacienteEliminar = id => {
     Alert.alert(
@@ -68,11 +99,15 @@ function AppContent() {
               pacientesState => pacientesState.id !== id,
             );
             setPacientes(pacienteActualizados);
+            guardarCitasStorage(JSON.stringify(pacienteActualizados))
           },
         },
       ],
     );
   };
+
+  console.log(paciente)
+
 
 
   const cerrarModal = () => {
@@ -122,6 +157,7 @@ function AppContent() {
         setPacientes={setPacientes}
         paciente={paciente}
         setPaciente={setPaciente}
+        guardarCitasStorage={guardarCitasStorage}
       />)}
       
 
